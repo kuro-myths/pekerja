@@ -747,6 +747,9 @@ pages:
       xai:
         description: x.ai
         title: xAI
+      zhipu:
+        description: bigmodel.cn / z.ai (GLM)
+        title: Zhipu AI (GLM)
       302-ai:
         description: 302.AI
         title: 302.AI

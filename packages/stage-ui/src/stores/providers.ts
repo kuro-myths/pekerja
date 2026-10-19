@@ -2008,6 +2008,17 @@ export const useProvidersStore = defineStore('providers', () => {
       creator: createMoonshotai,
       validation: ['health', 'model_list'],
     }),
+    'zhipu-ai': buildOpenAICompatibleProvider({
+      id: 'zhipu-ai',
+      name: 'Zhipu AI (GLM)',
+      nameKey: 'settings.pages.providers.provider.zhipu.title',
+      descriptionKey: 'settings.pages.providers.provider.zhipu.description',
+      icon: 'i-lobe-icons:zhipu',
+      description: 'bigmodel.cn / z.ai',
+      defaultBaseUrl: 'https://open.bigmodel.cn/api/paas/v4/',
+      creator: createOpenAI,
+      validation: ['health', 'model_list'],
+    }),
     'modelscope': buildOpenAICompatibleProvider({
       id: 'modelscope',
       name: 'ModelScope',
