@@ -1,0 +1,38 @@
+# Railway-oriented build for @proj-airi/stage-web
+# - builds ONLY the web app (no docs / histoire storybook => faster, lighter)
+# - nginx binds to Railway's $PORT and falls back to index.html (SPA routing)
+# Build context must be the repo root (set via railway.stage-web.toml).
+
+FROM node:24-trixie AS build-stage
+
+WORKDIR /app
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates curl build-essential python3 python3-setuptools \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN corepack enable
+
+ENV NODE_OPTIONS=--max-old-space-size=4096
+
+# Optional build-time config (set as Railway service variables; Railway passes them as build args)
+ARG VITE_AIRI_WS_URL
+ARG VITE_SERVER_URL
+ENV VITE_AIRI_WS_URL=$VITE_AIRI_WS_URL
+ENV VITE_SERVER_URL=$VITE_SERVER_URL
+
+COPY . .
+RUN pnpm install --frozen-lockfile
+
+RUN pnpm -F @proj-airi/stage-web run build
+
+
+FROM nginx:stable-alpine AS production-stage
+
+# nginx image renders /etc/nginx/templates/*.template with envsubst at startup
+ENV PORT=8080
+COPY apps/stage-web/nginx.railway.conf.template /etc/nginx/templates/default.conf.template
+COPY --from=build-stage /app/apps/stage-web/dist /usr/share/nginx/html
+
+EXPOSE 8080
+CMD ["nginx", "-g", "daemon off;"]
