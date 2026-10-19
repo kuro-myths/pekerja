@@ -1,0 +1,66 @@
+name: Railway build check
+
+# Catches build/runtime errors BEFORE Railway does:
+# builds the exact Dockerfile Railway uses, boots it, and probes it over HTTP.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: railway-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate railway.toml
+        run: |
+          python3 - <<'PY'
+          import tomllib, os, sys
+          cfg = tomllib.load(open("railway.toml", "rb"))
+          df = cfg["build"]["dockerfilePath"]
+          if not os.path.exists(df):
+              sys.exit(f"::error::dockerfilePath not found: {df}")
+          print("railway.toml OK ->", df)
+          PY
+      - name: Check nginx template placeholders
+        run: grep -q '\${PORT}' apps/stage-web/nginx.railway.conf.template
+
+  docker-build-and-probe:
+    needs: validate-config
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image (same as Railway)
+        run: |
+          docker buildx build \
+            -f apps/stage-web/Dockerfile.railway \
+            -t airi-stage-web:ci \
+            --load . 2>&1 | tee build.log
+      - name: Boot container and probe
+        run: |
+          docker run -d --name web -e PORT=8080 -p 8080:8080 airi-stage-web:ci
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/ || true)
+            [ "$code" = "200" ] && echo "HTTP 200 OK" && exit 0
+            sleep 2
+          done
+          echo "::error::Container did not return HTTP 200"
+          docker logs web
+          exit 1
+      - name: SPA fallback works
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/some/spa/route)
+          test "$code" = "200" || (echo "::error::SPA fallback returned $code" && exit 1)
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log

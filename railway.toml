@@ -1,0 +1,11 @@
+# Railway config-as-code (auto-detected at repo root).
+# Forces the Docker build; otherwise Railpack sees Cargo.toml and tries to build Rust.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "apps/stage-web/Dockerfile.railway"
+
+[deploy]
+healthcheckPath = "/"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
