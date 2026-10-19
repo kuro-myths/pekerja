@@ -22,7 +22,8 @@ ENV VITE_AIRI_WS_URL=$VITE_AIRI_WS_URL
 ENV VITE_SERVER_URL=$VITE_SERVER_URL
 
 COPY . .
-RUN pnpm install --frozen-lockfile
+# upstream lockfile is out of sync with packages/stage-ui-live2d, so do not freeze
+RUN pnpm install --no-frozen-lockfile
 
 RUN pnpm -F @proj-airi/stage-web run build
 
