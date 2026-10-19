@@ -2008,6 +2008,17 @@ export const useProvidersStore = defineStore('providers', () => {
       creator: createMoonshotai,
       validation: ['health', 'model_list'],
     }),
+    '9router': buildOpenAICompatibleProvider({
+      id: '9router',
+      name: '9Router',
+      nameKey: 'settings.pages.providers.provider.9router.title',
+      descriptionKey: 'settings.pages.providers.provider.9router.description',
+      icon: 'i-solar:routing-2-bold-duotone',
+      description: '9Router AI gateway (OpenAI-compatible, /v1)',
+      defaultBaseUrl: 'http://localhost:20128/v1',
+      creator: createOpenAI,
+      validation: ['health', 'model_list'],
+    }),
     'zhipu-ai': buildOpenAICompatibleProvider({
       id: 'zhipu-ai',
       name: 'Zhipu AI (GLM)',

@@ -750,6 +750,9 @@ pages:
       zhipu:
         description: bigmodel.cn / z.ai (GLM)
         title: Zhipu AI (GLM)
+      9router:
+        description: 9Router AI gateway (OpenAI-compatible)
+        title: 9Router
       302-ai:
         description: 302.AI
         title: 302.AI
